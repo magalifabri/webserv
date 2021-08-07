@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-std::string	execute_cgi(webserv& webserv, request& request, location& location)
+void	execute_cgi(webserv& webserv, request& request, location& location)
 {
 	init_fds(webserv);
 
@@ -58,16 +58,15 @@ std::string	execute_cgi(webserv& webserv, request& request, location& location)
 	close_fds(webserv);
 	delete_arrays(args, envp);
 
-	edit_response_headers(&response);
-	return response;
+	edit_response_headers(request, response);
 }
 
-void	edit_response_headers(std::string* response)
+void	edit_response_headers(request& request, std::string response)
 {
 	// std::cout << RED "RESPONSE\n" RESET << *response << '\n'; // TESTING
 
-	std::string headers = response->substr(0, response->find("\r\n\r\n") + 4);
-	std::string body = response->substr(response->find("\r\n\r\n") + 4);
+	std::string headers = response.substr(0, response.find("\r\n\r\n") + 4);
+	std::string body = response.substr(response.find("\r\n\r\n") + 4);
 
 	size_t pos = headers.find("Status:");
 
@@ -80,7 +79,8 @@ void	edit_response_headers(std::string* response)
 	if (headers.find("Content-Length") == std::string::npos)
 		headers.replace(headers.find("Content-"), 0, SSTR("Content-Length: " << body.length() << "\n"));
 
-	std::cout << BOLD << GREEN << headers << RESET << '\n'; // TESTING
+	// std::cout << BOLD << GREEN << headers << RESET << '\n'; // TESTING
 
-	*response = headers + body;
+	request.response_header = headers;
+	request.response_body = body;
 }

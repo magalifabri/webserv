@@ -11,8 +11,6 @@ bool	is_file(std::string path)
 bool	is_directory(std::string path)
 {
 	struct stat buffer;
-	// if (path[path.length() - 1] != '/')
-	// 	return false;
 	if (stat(path.c_str(), &buffer) != 0)
 		return false;
 	return S_ISDIR(buffer.st_mode);

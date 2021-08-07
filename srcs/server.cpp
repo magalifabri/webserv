@@ -10,7 +10,7 @@ int	main(int argc, char** argv)
 		run_servers(webserv);
 		webserv.servers.clear();
 	}
-	catch(const std::exception& e)
+	catch (const std::exception& e)
 	{
 		std::cerr << "Error: " << e.what() << '\n';
 		return EXIT_FAILURE;
@@ -20,9 +20,10 @@ int	main(int argc, char** argv)
 
 
 
-void run_servers(webserv& webserv)
+void	run_servers(webserv& webserv)
 {
 	std::vector<int> listen_sds = create_listen_sds(webserv);
+
 	while (true)
 	{
 		webserv.read_set = webserv.master_set;
@@ -44,35 +45,7 @@ void run_servers(webserv& webserv)
 
 
 
-bool handle_selected_sds(webserv& webserv, std::vector<int> listen_sds)
-{
-	for (int sd = 0; sd <= webserv.max_sd_in_set; sd++)
-	{
-		if (FD_ISSET(sd, &webserv.read_set))
-		{
-			/* Check if current checked sd is a listening socket. */
-			for (std::vector<int>::iterator it = listen_sds.begin(); it != listen_sds.end(); it++)
-				if (sd == (*it))
-					return (accept_new_connection(webserv, (*it)));
-
-			/* It's not a listening socket, so an existing connection is sending a request. */
-			if (webserv.request_map[sd].in_use == false)
-			{
-				std::cout << std::endl << BOLD "New request coming in on sd " << sd << RESET << std::endl;
-				webserv.request_map[sd] = request(webserv.client_ip_map[sd]);
-			}
-			else
-				std::cout << std::endl << BOLD "Data for existing request coming in on sd " << sd << RESET << std::endl;
-
-			connect_to_existing_sd(webserv, sd, webserv.request_map[sd]);
-		}
-	}
-	return (true);
-}
-
-
-
-void close_sds(webserv& webserv)
+void	close_sds(webserv& webserv)
 {
 	for (int sd = 0; sd <= webserv.max_sd_in_set ; ++sd)
 		if (FD_ISSET(sd, &webserv.master_set))

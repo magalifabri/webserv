@@ -1,6 +1,6 @@
 #include "webserv.hpp" 
 
-std::string get_response(webserv &webserv, request &request)
+void set_response(webserv &webserv, request &request)
 {
 	/* If a POST request is sent (via the upload.html page) or a DELETE request
 	is sent (via the delete.html page), then the content of the request is
@@ -22,7 +22,6 @@ std::string get_response(webserv &webserv, request &request)
 		return (handle_PUT_request(request.location, request));
 	else
 		return (handle_GET_or_HEAD_request(webserv, request));
-		// return (handle_GET_or_HEAD_request(request));
 }
 
 
@@ -40,15 +39,11 @@ bool request_method_allowed(request &request, const location &location)
 
 
 
-std::string create_redirection_response(request &request)
+void set_redirection_response(request &request, context *cxt)
 {
-	std::string redirect = SSTR(
-		"HTTP/1.1 " << request.conf.status_codes[request.location.return_code] << "\n" <<
-		"Location: " << request.location.redirect << "\r\n\r\n");
-	
-	TESTING_print_response(redirect, "");
-	
-	return (redirect);
+	request.response_header = SSTR(
+		"HTTP/1.1 " << request.server.status_codes[cxt->return_code] << "\n" <<
+		"Location: " << cxt->redirect << "\r\n\r\n");
 }
 
 
@@ -56,13 +51,19 @@ std::string create_redirection_response(request &request)
 /*
 - check if URI should trigger redirection
 - check if method is allowed
-- get and return an appropriate response
+- set an appropriate response
 */
-std::string process_request(webserv& webserv, request &request)
+void request_to_response(webserv& webserv, request &request)
 {
-	if (!request.location.redirect.empty())
-		return (create_redirection_response(request));
 	if (request_method_allowed(request, request.location) == false)
 		throw (405);
-	return (get_response(webserv, request));
+	if (!request.server.redirect.empty()) // server redirection w/ location
+		return (set_redirection_response(request, &request.server));
+	if (request.server.return_code != -1) // server redirection w/o location
+		throw (request.server.return_code);
+	if (!request.location.redirect.empty()) // location redirection w/ location
+		return (set_redirection_response(request, &request.location));
+	if (request.location.return_code != -1) // location redirection w/o location
+		throw (request.location.return_code);
+	set_response(webserv, request);
 }

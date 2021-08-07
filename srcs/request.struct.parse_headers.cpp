@@ -14,10 +14,8 @@ std::string get_name(const std::string &request, size_t &current_pos)
 	if (name.empty()
 	|| name.find_first_of(" \t\r\n") != std::string::npos)
 		throw std::string("400 Bad request");
-		// throw ("400 Bad request");
 	/* convert name to lowercase for uniformity, as names should be handled case-insensitively */
 	std::for_each(name.begin(), name.end(), char_tolower);
-	// std::cout << "name: '" << name << "'" << std::endl; // TESTING
 	current_pos = name_end_pos + 1;
 
 	return (name);
@@ -44,7 +42,6 @@ std::string get_value(const std::string &request, size_t &current_pos, bool &rea
 	size_t value_end_pos = request.find("\r\n", current_pos);
 	std::string value = request.substr(current_pos, value_end_pos - current_pos);
 	value = trim_whitespace(value);
-	// std::cout << "value: '" << value << "'" << std::endl; // TESTING
 	
 	current_pos = value_end_pos + 2;
 
@@ -85,7 +82,8 @@ void request::parse_headers(void)
 	if (headers_map["content-length"] != "")
 		content_length = std::stoi(headers_map["content-length"]);
 	else if (headers_map["transfer-encoding"] == "chunked")
-		std::cout << CYAN "receiving chunked data..." RESET << std::endl;
+		;
+		// std::cout << CYAN "receiving chunked data..." RESET << std::endl;
 	else
 		request_received = true;
 }

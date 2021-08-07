@@ -11,8 +11,11 @@ request::request(std::string client_ip) : client_ip(client_ip)
 	first_line_received = false;
 	headers_received = false;
 	request_received = false;
-	response_sent = false;
-	content_length = 0;
+	response_ready_to_send = false;
+	total_bytes_sent = 0;
+	response_header = "";
+	response_body = "";
+	response = "";
 }
 
 
@@ -40,30 +43,28 @@ void request::process_data(
 		if (std::search(headers_data.begin(), headers_data.end(),
 			query.begin(), query.end()) == headers_data.end())
 		{
-			std::cout << CYAN "headers data not (yet) fully received: not ready for processing" RESET << std::endl; // TESTING
+			// std::cout << CYAN "headers data not (yet) fully received: not ready for processing" RESET << std::endl; // TESTING
 			return ;
 		}
-		std::cout << CYAN "headers data fully received: start processing..." RESET << std::endl; // TESTING
+		// std::cout << CYAN "headers data fully received: start processing..." RESET << std::endl; // TESTING
 
 		parse_first_line();
 		parse_headers();
 
-		conf = select_server(sd, webserv.servers, webserv.port_map, headers_map["host"]);
-		location = select_location(conf, headers_map["target"], headers_map["method"]);
-		location.server = &conf;
+		server = select_server(webserv, client_ip, headers_map["host"], sd);
+		location = select_location(server, headers_map["target"], headers_map["method"]);
+		location.server = &server;
 		// std::cout << "location: '" << location.name << "'" << std::endl; // TESTING
 
-		std::cout << "content length: " << content_length << '\n';
+		// std::cout << "content length: " << content_length << '\n'; // TESTING
 		if (content_length > location.client_max_body_size)
-			throw std::string("413 Request Entity Too Large"); // floor
-			// throw ("413 Request Entity Too Large");
+			throw std::string("413 Request Entity Too Large");
 	}
 
 	if (headers_map["transfer-encoding"] == "chunked")
 	{
 		if (collect_body_chunked(data, data_size) == false)
-			throw std::string("413 Request Entity Too Large"); // floor
-			// throw ("413 Request Entity Too Large");
+			throw std::string("413 Request Entity Too Large");
 	}
 	else
 		collect_body(data, data_size);
@@ -101,9 +102,5 @@ void request::parse_URI_query(void)
 
 		URI_map[key] = value;
 	}
-	// TESTING ----------------------------------
-	// for (std::map<std::string, std::string>::iterator it = URI_map.begin(); it != URI_map.end(); it++)
-	// 	std::cout << it->first << ": " << it->second << std::endl;
-	// ------------------------------------------
 	URI_query_map = URI_map;
 }

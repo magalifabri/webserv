@@ -1,19 +1,37 @@
 #include "request.struct.hpp"
 
+/* request-line = method SP request-target SP HTTP-version CRLF */
+void request::parse_first_line(void)
+{
+	/* convert char array to string to use string's methods */
+	std::vector<char>::iterator it_first_line_end = std::find(
+		headers_data.begin(), headers_data.end(), '\n');
+	std::string request(headers_data.begin(), it_first_line_end);
+	
+	size_t current_pos = 0;
+
+	set_method(request, current_pos);
+	set_target(request, current_pos);
+	set_protocol_version(request, current_pos);
+
+	first_line_received = true;
+	// std::cout << CYAN " - processing: request line √" RESET << std::endl; // TESTING
+	
+	/* erase what has been parsed; what remains belongs to the body */
+	headers_data.erase(headers_data.begin(), it_first_line_end + 1);
+}
+
+
 
 void request::set_method(const std::string &request, size_t &current_pos)
 {
-	// std::cout << "REQUEST:\n" << request << '\n'; // TESTING
 	size_t word_end_pos = request.find(" ");
 	if (word_end_pos == std::string::npos)
-		throw std::string("400 Bad request"); // floor
-		// throw ("400 Bad request");
+		throw std::string("400 Bad request");
 	headers_map["method"] = request.substr(current_pos, word_end_pos - current_pos);
-	// std::cout << "method: " << headers_map["method"] << std::endl; // TESTING
 	
 	if (headers_map["method"].empty())
-		throw std::string("400 Bad request"); // floor
-		// throw ("400 Bad request");
+		throw std::string("400 Bad request");
 
 	/* check if method is implemented */
 	if (headers_map["method"] != "GET"
@@ -24,8 +42,7 @@ void request::set_method(const std::string &request, size_t &current_pos)
 		)
 	{
 		std::cout << "method: " << headers_map["method"] << '\n';
-		throw std::string("501 Not Implemented"); // floor
-		// throw ("501 Not Implemented");
+		throw std::string("501 Not Implemented");
 	}
 
 	current_pos = word_end_pos + 1;
@@ -57,19 +74,14 @@ void request::set_target(const std::string &request, size_t &current_pos)
 {
 	size_t word_end_pos = request.find(" ", current_pos);
 	if (word_end_pos == std::string::npos)
-		throw std::string("400 Bad request"); // floor
-		// throw ("400 Bad request");
+		throw std::string("400 Bad request");
 	headers_map["raw-target"] = request.substr(current_pos, word_end_pos - current_pos);
-	// std::cout << "raw target: " << headers_map["raw-target"] << std::endl; // TESTING
 
 	if (headers_map["raw-target"].empty())
-		throw std::string("400 Bad request"); // floor
-		// throw ("400 Bad request");
+		throw std::string("400 Bad request");
 		
-	/* URI_MAX_LENGTH set in request.struct.hpp */
-	if (headers_map["raw-target"].length() > URI_MAX_LENGTH)
-		throw std::string("414 URI Too Long"); // floor
-		// throw ("414 URI Too Long");
+	if (headers_map["raw-target"].length() > URI_MAX_LENGTH) // URI_MAX_LENGTH set in request.struct.hpp
+		throw std::string("414 URI Too Long");
 	
 	/* decode URL */
 	headers_map["full-target"] = decode_URL(headers_map["raw-target"]);
@@ -80,8 +92,6 @@ void request::set_target(const std::string &request, size_t &current_pos)
 	else
 		headers_map["target"] = headers_map["full-target"];
 
-	// std::cout << "full target: " << headers_map["full-target"] << std::endl; // TESTING
-
 	current_pos = word_end_pos + 1;
 }
 
@@ -90,39 +100,16 @@ void request::set_target(const std::string &request, size_t &current_pos)
 void request::set_protocol_version(const std::string &request, size_t &current_pos)
 {
 	if (request.find_first_of("\r\n", current_pos) != std::string::npos) // floor
-		headers_map["protocol-version"] = request.substr(current_pos, request.find_first_of("\r\n", current_pos) - current_pos);
+	{
+		headers_map["protocol-version"] = request.substr(
+			current_pos, request.find_first_of("\r\n", current_pos) - current_pos);
+	}
 	else
 		headers_map["protocol-version"] = request.substr(current_pos);
-	// std::cout << "version: " << headers_map["protocol-version"] << std::endl; // TESTING
 
 	if (headers_map["protocol-version"].empty())
-		throw std::string("400 Bad request"); // floor
-		// throw ("400 Bad request");
+		throw std::string("400 Bad request");
 
 	if (headers_map["protocol-version"].find("HTTP/1.") == std::string::npos)
 		throw std::string("505 HTTP Version Not Supported");
-		// throw ("505 HTTP Version Not Supported"); // floor
-}
-
-
-
-/* request-line = method SP request-target SP HTTP-version CRLF */
-void request::parse_first_line(void)
-{
-	/* convert char array to string to use string's methods */
-	std::vector<char>::iterator it_first_line_end = std::find(
-		headers_data.begin(), headers_data.end(), '\n');
-	std::string request(headers_data.begin(), it_first_line_end);
-	
-	size_t current_pos = 0;
-
-	set_method(request, current_pos);
-	set_target(request, current_pos);
-	set_protocol_version(request, current_pos);
-
-	first_line_received = true;
-	// std::cout << CYAN " - processing: request line √" RESET << std::endl; // TESTING
-	
-	/* erase what has been parsed; what remains belongs to the body */
-	headers_data.erase(headers_data.begin(), it_first_line_end + 1);
 }

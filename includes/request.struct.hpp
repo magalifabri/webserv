@@ -14,7 +14,6 @@
 
 #include "context.struct.hpp" // server struct, location struct
 #include "webserv.hpp"
-void	TESTING_print_vector_char(std::vector<char> vector); // TESTING
 
 #include <string>
 #include <map>
@@ -26,63 +25,66 @@ struct webserv;
 
 struct request
 {
+	/* request.struct.cpp */
 	request(void);
 	request(std::string client_ip);
+	void process_data(const char *data, const size_t &data_size, int sd, webserv &webserv);
+	void parse_URI_query(void);
 
-    void process_data(const char *data, const size_t &data_size, int sd, webserv &webserv);
-    void parse_first_line(void);
-    void set_method(const std::string &request, size_t &current_pos);
-    void set_target(const std::string &request, size_t &current_pos);
-    void set_protocol_version(const std::string &request, size_t &current_pos);
-    
-    void parse_headers(void);
-    
-    void collect_body(const char *data, const size_t &data_size);
-    void copy_from_headers_data(void);
-    void append_requests_data(const char *data, const size_t &data_size);
+	/* request.struct.parse_first_line.cpp */
+	void parse_first_line(void);
+	void set_method(const std::string &request, size_t &current_pos);
+	void set_target(const std::string &request, size_t &current_pos);
+	void set_protocol_version(const std::string &request, size_t &current_pos);
+	
+	/* request.struct.parse_headers.cpp */
+	void parse_headers(void);
+	
+	/* request.struct.content_data.cpp */
+	void collect_body(const char *data, const size_t &data_size);
+	void copy_from_headers_data(void);
+	void append_requests_data(const char *data, const size_t &data_size);
 
-    bool collect_body_chunked(const char *data, const size_t &data_size);
-    void parse_chunked_data(void);
-    unsigned int convert_hex_str_to_int(std::string chunk_size_hex);
+	/* request.struct.chunked.cpp */
+	bool collect_body_chunked(const char *data, const size_t &data_size);
+	void parse_chunked_data(void);
+	unsigned int convert_hex_str_to_int(std::string chunk_size_hex);
 
-    void parse_URI_query(void);
+	bool								data_contains_headers;
+	std::vector<char>					headers_data;
+	std::map<std::string, std::string>	headers_map;
+	std::vector<char>					body_data;
+	std::map<std::string, std::string>	URI_query_map;
+	
+	/* in_use:
+	- true: this request instantiation is currently being used
+	- initialised to false in integrate_new_connection()
+	- set to true when the request struct is initialised in
+	  handle_selected_sds()
+	- set back to false in connect_to_existing_sd(), after sending the response */
+	bool			in_use;
 
-    bool data_contains_headers;
-    std::vector<char> headers_data;
-    std::map<std::string, std::string> headers_map;
-    std::vector<char> body_data;
-    std::map<std::string, std::string> URI_query_map;
-    
-    /*
-    in_use:
-    true: request has not yet been completed and should not be overwritten with a fresh request
-    
-    - initialised to false in integrate_new_connection()
-    - set to true when the request struct is initialised in handle_selected_sds()
-    - set back to false in connect_to_existing_sd(), after sending the response
-    */
-    bool in_use;
-    unsigned int content_length;
-    unsigned int content_nbytes_received;
-    bool first_line_received;
-    bool headers_received;
-    bool request_received;
-    bool response_sent;
+	unsigned int	content_length;
+	unsigned int	content_nbytes_received;
 
-	std::string	client_ip;
-	//
-	std::string match;
-	std::string	script_name;
-	std::string	path_info;
-	std::string	query_str;
-	//
-    
-    server conf;
-    location location;
+	bool			first_line_received;
+	bool			headers_received;
+	bool			request_received;
+
+	std::string		response_header;
+	std::string		response_body;
+	std::string		response;
+	bool			response_ready_to_send;
+	int				total_bytes_sent;
+	int				bytes_left_to_send;
+
+	std::string		client_ip;
+	
+	server			server;
+	location		location;
 };
 
-server&		select_server(int sd, std::vector<server> servers,
-				std::map<size_t, size_t> port_map, std::string host);
-location&	select_location(server conf, std::string URI, std::string method);
+server&		select_server(webserv& webserv, std::string ip, std::string host, int sd);
+location&	select_location(server server, std::string URI, std::string method);
 
 #endif

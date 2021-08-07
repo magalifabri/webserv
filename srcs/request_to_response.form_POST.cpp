@@ -82,7 +82,6 @@ std::string create_file_on_server(
 	// std::cout << GREEN BOLD "UPLOADING" RESET << std::endl;
 
 	std::string filename = get_filename(request);
-	// std::cout << "filename: " << filename << std::endl; // TESTING
 	std::vector<char>::iterator it_data_start = find_data_start(request);
 	std::vector<char>::iterator it_data_end = find_data_end(request, it_data_start);
 
@@ -100,7 +99,7 @@ std::string create_file_on_server(
 
 
 
-std::string handle_webform_POST(const location &location, request &request)
+void handle_webform_POST(const location &location, request &request)
 {
 	// std::cout << RED BOLD "location.upload_path: " << location.upload_path << RESET << std::endl; //TESTING
 
@@ -112,7 +111,8 @@ std::string handle_webform_POST(const location &location, request &request)
 	/* attempt upload */
 	std::string created_file = create_file_on_server(request, location.upload_path);
 
-	return (create_2xx_response_page("201 Created", created_file));
+	std::string location_header = "Location: " + created_file + "\n"; // floor
+	set_2xx_response_page(request, "201 Created", location_header);
 }
 
 

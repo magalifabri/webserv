@@ -1,25 +1,28 @@
 #include "webserv.hpp"
 
-std::vector<int> create_listen_sds(webserv &webserv)
+std::vector<int>	create_listen_sds(webserv &webserv)
 {
 	int listen_sd;
 	std::vector<int> listen_sds;
+	static std::map<size_t, std::string> host_port_map;
 	for (std::vector<server>::iterator it = webserv.servers.begin(); it != webserv.servers.end(); it++)
 	{
 		for (size_t i = 0; i < (*it).port.size(); i++)
 		{
 			bool listening = false;
-			std::map<size_t, size_t>::iterator it2 = webserv.port_map.begin();
-			for (; it2 != webserv.port_map.end(); it2++)
-				if ((listening = (it2->second == (*it).port[i])))
+			std::string host_port = SSTR((*it).host[i] << ":" << (int)(*it).port[i]);
+			std::map<size_t, std::string>::iterator it2 = host_port_map.begin();
+			for (; it2 != host_port_map.end(); it2++)
+				if ((listening = (it2->second == host_port)))
 					break ;
 			if (listening)
 				continue ;
-			std::cout << "\nRetrieving sd for port " << (*it).port[i] << '\n';
-			listen_sd = initialise_listen_sd((*it).port[i]);
+			std::cout << "\nRetrieving sd for " << host_port << '\n'; // TESTING
+			// listen_sd = initialise_listen_sd((*it).port[i]);
+			listen_sd = initialise_listen_sd((*it).host[i], (*it).port[i]);
 			listen_sds.push_back(listen_sd);
 			webserv.port_map[listen_sd] = (*it).port[i];
-			// std::cout << "\nStoring config for port: " << server_map[listen_sd].port[i] << '\n';
+			host_port_map[listen_sd] = host_port;
 			
 			/* Add the socket for listening to master_set. */
 			FD_SET(listen_sd, &webserv.master_set);
@@ -29,14 +32,12 @@ std::vector<int> create_listen_sds(webserv &webserv)
 		}
 	}
 
-	std::cout << "\nListening on " << listen_sds.size() << " port(s)\n";
+	std::cout << "\nListening on " << listen_sds.size() << " port(s)\n"; // TESTING
 
 	return (listen_sds);
 }
 
-
-
-int initialise_listen_sd(const int &port)
+int	initialise_listen_sd(const std::string &ip, const int &port)
 {
 	/* create an PF_INET stream socket to receive incoming connections on */
 	int listen_sd = socket(PF_INET, SOCK_STREAM, 0);
@@ -56,7 +57,10 @@ int initialise_listen_sd(const int &port)
 	struct sockaddr_in server_adrr;
 	memset(&server_adrr, 0, sizeof(server_adrr));
 	server_adrr.sin_family = AF_INET;
-	server_adrr.sin_addr.s_addr = htonl(INADDR_ANY);
+	if (ip == "0.0.0.0")
+		server_adrr.sin_addr.s_addr = htonl(INADDR_ANY);
+	else
+		server_adrr.sin_addr.s_addr = inet_addr(ip.c_str());
 	server_adrr.sin_port = htons(port);
 	memset(server_adrr.sin_zero, '\0', sizeof(server_adrr.sin_zero));
 	if (bind(listen_sd, (struct sockaddr*)&server_adrr, sizeof(server_adrr)) == -1)

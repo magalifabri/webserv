@@ -8,7 +8,6 @@ std::string get_content_type(const std::string &status, const std::string &URI)
 		/* extract what comes after the period, which would be the file extension */ 
 		size_t last_period_pos = URI.find_last_of(".");
 		std::string file_extension = URI.substr(last_period_pos + 1, URI.length());
-		// std::cout << file_extension << std::endl; // TESTING
 		
 		if (file_extension == "css")
 			return ("text/css");

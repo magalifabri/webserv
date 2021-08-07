@@ -76,16 +76,16 @@ char**	to_envp(std::map<std::string, std::string> env)
 	size_t i = 0;
 	std::map<std::string, std::string>::iterator it = env.begin();
 
-	std::cout << CYAN << "ENV\n"; // TESTING
+	// std::cout << CYAN << "ENV\n"; // TESTING
 	for (; it != env.end(); it++)
 	{
 		std::string	elem = it->first + "=" + it->second;
-		std::cout << elem << '\n'; // TESTING
+		// std::cout << elem << '\n'; // TESTING
 		envp[i] = new char[elem.length() + 1];
 		envp[i] = strcpy(envp[i], elem.c_str());
 		i++;
 	}
-	std::cout << RESET << '\n'; // TESTING
+	// std::cout << RESET << '\n'; // TESTING
 
 	envp[i] = NULL;
 

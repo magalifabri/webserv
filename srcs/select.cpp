@@ -1,93 +1,93 @@
 #include "webserv.hpp"
 
-/* --- SELECT SERVER --- */
-server&	select_server(int sd, std::vector<server> servers, std::map<size_t, size_t> port_map, std::string host)
+server&	select_server(webserv& webserv, std::string client_ip, std::string host, int sd)
 {
-	host = host.substr(0, host.find(':'));
-	// std::cout << GREEN << "Port: " << port_map[sd] << "\nHostname: " << host << RESET << '\n'; // TESTING
-
-	// for (size_t i = 0; i < servers.size(); i++)
-	size_t i; // TESTING
-	for (i = 0; i < servers.size(); i++) // TESTING
-		for (size_t j = 0; j < servers[i].port.size(); j++)
-			if (port_map[sd] == servers[i].port[j])
-				for (size_t k = 0; k < servers[i].names.size(); k++)
-					if (host == servers[i].names[k])
-						goto stop; // TESTING
-						// return servers[i];
-	// for (size_t i = 0; i < servers.size(); i++)
-	for (i = 0; i < servers.size(); i++) // TESTING
-		for (size_t j = 0; j < servers[i].port.size(); j++)
-			if (port_map[sd] == servers[i].port[j])
-				goto stop; // TESTING
-				// return servers[i];
-	stop: // TESTING
-	// std::cout << GREEN << "Server #" << i << RESET << '\n'; // TESTING
-	return servers[i]; // TESTING
+	std::vector<int> servers;
+	for (size_t i = 0; i < webserv.servers.size(); i++)
+		for (size_t j = 0; j < webserv.servers[i].host.size(); j++)
+			if ((client_ip == webserv.servers[i].host[j]
+				|| webserv.servers[i].host[j] == "0.0.0.0")
+				&& webserv.port_map[sd] == webserv.servers[i].port[j])
+				servers.push_back(i);
+	std::vector<int>::iterator it;
+	host = host.substr(0, host.find(":"));
+	for (it = servers.begin(); it != servers.end(); it++)
+		for (size_t i = 0; i < webserv.servers[*it].names.size(); i++)
+			if (host == webserv.servers[*it].names[i])
+				return webserv.servers[*it];
+	for (it = servers.begin(); it != servers.end(); it++)
+		if (webserv.servers[*it].default_server)
+			return webserv.servers[*it];
+	throw std::string("500 Internal Server Error");
 }
 
-std::string	get_root(server conf, std::string URI)
+static std::string	get_root(server server, std::string URI)
 {
 	while (!URI.empty())
 	{
-		for (size_t i = 0; i < conf.locations.size(); i++)
-			if (conf.locations[i].name == URI)
-				return conf.locations[i].root;
+		for (size_t i = 0; i < server.locations.size(); i++)
+			if (server.locations[i].name == URI)
+				return server.locations[i].root;
 		URI = URI.substr(0, URI.rfind('/'));
-		for (size_t i = 0; i < conf.locations.size(); i++)
-			if (conf.locations[i].name == URI)
-				return conf.locations[i].root;
+		for (size_t i = 0; i < server.locations.size(); i++)
+			if (server.locations[i].name == URI)
+				return server.locations[i].root;
 		URI = URI.substr(0, URI.rfind('/') + 1);
 	}
-	return conf.root;
+	return server.root;
 }
 
-location&	select_location(server conf, std::string URI, std::string method)
+location&	select_location(server server, std::string URI, std::string method)
 {
 	// std::cout << URI << '\n'; // TESTING
 	if (URI[URI.length() - 1] != '/')
 		URI += "/";
 	while (!URI.empty())
 	{
-		for (size_t i = 0; i < conf.locations.size(); i++)
-			if (conf.locations[i].name == URI)
-				return conf.locations[i];
+		for (size_t i = 0; i < server.locations.size(); i++)
+			if (server.locations[i].name == URI)
+				return server.locations[i];
 		URI = URI.substr(0, URI.rfind('/'));
-		for (size_t i = 0; i < conf.locations.size(); i++)
-			if (conf.locations[i].name == URI)
-				return conf.locations[i];
+		for (size_t i = 0; i < server.locations.size(); i++)
+			if (server.locations[i].name == URI)
+				return server.locations[i];
 		if (URI.rfind(".") != std::string::npos)
 		{
 			std::string ext = URI.substr(URI.rfind("."));
-			for (size_t i = 0; i < conf.locations.size(); i++)
+			for (size_t i = 0; i < server.locations.size(); i++)
 			{
 				if (method == "GET" && ext == ".bla")
 					break ;
-				if (conf.locations[i].name == "*" + ext)
+				if (server.locations[i].name == "*" + ext)
 				{
-					conf.locations[i].root = get_root(conf, URI);
-					return conf.locations[i];
+					server.locations[i].root = get_root(server, URI);
+					return server.locations[i];
 				}
 			}
 		}
 		URI = URI.substr(0, URI.rfind('/') + 1);
 	}
-	throw std::runtime_error("500 Internal Server Error");
+	throw std::string("500 Internal Server Error");
 }
 
-bool	select_index(const location& location, std::string* URI)
+bool	select_index(request& request, std::string* URI)
 {
-	for (size_t i = 0; i < location.index.size(); i++)
+	for (size_t i = 0; i < request.location.index.size(); i++)
 	{
 		std::string tmp;
 		if ((*URI)[URI->length() - 1] != '/')
-			tmp = *URI + "/" + location.index[i];
+			tmp = *URI + "/" + request.location.index[i];
 		else
-			tmp = *URI + location.index[i];
+			tmp = *URI + request.location.index[i];
 		struct stat buffer;
-		if (!stat((location.root + tmp).c_str(), &buffer))
+		if (!stat((request.location.root + tmp).c_str(), &buffer))
 		{
 			*URI = tmp;
+			request.headers_map["target"] += "/" + request.location.index[i];
+			// std::cout << "new target: " << request.headers_map["target"] << '\n'; // TESTING
+			request.location = select_location(request.server,
+				request.headers_map["target"], request.headers_map["method"]);
+			request.location.server = &request.server;
 			return true;
 		}
 	}

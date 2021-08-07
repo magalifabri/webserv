@@ -9,27 +9,24 @@ std::string create_form_data_html(const std::map<std::string, std::string> &URI_
 		std::string value(it->second.begin(), it->second.end());
 		html += "<li>" + key + ": " + value + "</li>\n";
 	}
-	// std::cout << html << std::endl; // TESTING
 
 	return (html);
 }
 
 
 
-std::string assemble_response(const std::vector<char> &file_vector)
+void assemble_and_set_response(request &request, const std::vector<char> &file_vector)
 {
-	std::string page_html(file_vector.begin(), file_vector.end());
-	if (page_html.empty() == true)
+	std::string response_body(file_vector.begin(), file_vector.end());
+	if (response_body.empty() == true)
 		throw (500);
-
-	std::string response_header = SSTR(
+	request.response_body = response_body;
+	request.response_header = SSTR(
 		"HTTP/1.1 200 OK\n"
 		<< "Content-Type: text/html\n"
-		<< "Content-Length: " << page_html.length() << "\n"
+		<< "Content-Length: " << request.response_body.length() << "\n"
 		<< "\n"
 	);
-
-	return (response_header + page_html);
 }
 
 
@@ -40,7 +37,7 @@ std::string assemble_response(const std::vector<char> &file_vector)
   an appropriate header)
 - return a response with the customized template
 */
-std::string create_get_form_response(request &request)
+void create_get_form_response(request &request)
 {
 	request.parse_URI_query();
 	/* create html list of form data to insert into template */
@@ -52,7 +49,5 @@ std::string create_get_form_response(request &request)
 	insert_string_into_template(
 		file_vector, html, "<!-- insert form data here -->");
 	/* convert vector<char> - string */
-	std::string response = assemble_response(file_vector);
-	// TESTING_print_response(response_header, page_html);
-	return (response);
+	assemble_and_set_response(request, file_vector);
 }

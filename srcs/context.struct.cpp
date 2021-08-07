@@ -13,20 +13,19 @@ context::context(void) : root(""), autoindex(false), autoindex_set(false), clien
 context::~context(void) {}
 
 server::server(void) : context(), default_server(false) {
-	this->status_codes[300] = "300 Multiple Choice"; // The choices are listed in an HTML page in the body and the user clicks on one to select it.
-	this->status_codes[301] = "301 Moved Permanently"; // Use: Reorganization of a Web site.
-	this->status_codes[302] = "302 Found"; // The Web page is temporarily unavailable for unforeseen reasons.
-	this->status_codes[303] = "303 See Other"; // Used to redirect after a PUT or a POST, so that refreshing the result page doesn't re-trigger the operation.
-	this->status_codes[304] = "304 Not Modified"; // Sent for revalidated conditional requests. Indicates that the cached response is still fresh and can be used.
-	this->status_codes[307] = "307 Temporary Redirect"; // The Web page is temporarily unavailable for unforeseen reasons. Better than 302 when non-GET operations are available on the site.
-	this->status_codes[308] = "308 Permanent Redirect"; // Use: Reorganization of a Web site, with non-GET links/operations.
-	this->status_codes[400] = "400 Bad Request"; // The server could not understand the request due to invalid syntax.
-	this->status_codes[403] = "403 Forbidden"; // The client does not have access rights to the content; that is, it is unauthorized, so the server is refusing to give the requested resource.
-	this->status_codes[404] = "404 Not Found"; // The server can not find the requested resource.
-	this->status_codes[405] = "405 Method Not Allowed"; // The request method is known by the server but is not supported by the target resource.
+	this->status_codes[301] = "301 Moved Permanently";
+	this->status_codes[302] = "302 Found"; // default
+	// this->status_codes[303] = "303 See Other"; // Used to redirect after a PUT or a POST, so that refreshing the result page doesn't re-trigger the operation.
+	// this->status_codes[304] = "304 Not Modified"; // Sent for revalidated conditional requests. Indicates that the cached response is still fresh and can be used.
+	this->status_codes[307] = "307 Temporary Redirect"; // better than 302 when non-GET operations are available on the site
+	this->status_codes[308] = "308 Permanent Redirect";
+	this->status_codes[400] = "400 Bad Request";
+	this->status_codes[403] = "403 Forbidden";
+	this->status_codes[404] = "404 Not Found";
+	this->status_codes[405] = "405 Method Not Allowed";
 	this->status_codes[413] = "413 Request Entity Too Large";
-	this->status_codes[500] = "500 Internal Server Error"; // The server has encountered a situation it doesn't know how to handle.
-	this->status_codes[501] = "501 Not Implemented"; // The request method is not supported by the server and cannot be handled.
+	this->status_codes[500] = "500 Internal Server Error";
+	this->status_codes[501] = "501 Not Implemented";
 	this->status_codes[505] = "505 HTTP Version Not Supported";
 }
 

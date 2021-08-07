@@ -54,7 +54,8 @@
 			{
 				type: "DELETE",
 				url: $('#fileToDelete').val(),
-				data: 'fileToDelete=rm www/uploads/' + $('#fileToDelete').val()
+				data: 'fileToDelete=rm ' + $('#fileToDelete').val() // floor
+				// data: 'fileToDelete=rm www/uploads/' + $('#fileToDelete').val()
 			});
 		})
 	</script>

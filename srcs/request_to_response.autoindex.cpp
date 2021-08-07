@@ -50,7 +50,6 @@ std::string create_dir_content_html(
 		dir_content_html += *it;
 		dir_content_html += "</a></li>\n";
 	}
-	// std::cout << "dir_content_html:" << std::endl << dir_content_html; // TESTING
 
 	return (dir_content_html);
 }
@@ -94,24 +93,22 @@ void insert_string_into_template(
 
 
 
-std::string assemble_response(
-	const std::vector<char> &html_template, const std::string &folder)
+void assemble_and_set_response(
+	request &request, const std::vector<char> &html_template, const std::string &folder)
 {
 	/* vector<char> - string */
 	std::string response_body(html_template.begin(), html_template.end());
 	if (response_body.empty())
 		throw (500);
-	// std::cout << "response_body: " << response_body << std::cout; // TESTING
+	request.response_body = response_body;
 
-	std::string response_header = SSTR(
+	request.response_header = SSTR(
 		"HTTP/1.1 200 OK" << "\n"
 		<< "Content-Type: text/html\n"
-		<< "Content-Length: " << response_body.length() << "\n"
+		<< "Content-Length: " << request.response_body.length() << "\n"
 		<< "AutoIndex: " << folder << "\n"
 		<< "\n"
 	);
-
-	return (response_header + response_body);
 }
 
 
@@ -125,10 +122,10 @@ std::string assemble_response(
 - remove the first two dir_content_vector entries as those contain '.' and '..'
 - load a premade html template and insert the content list into it (as well as
   an appropriate header)
-- return a response with the customized template
+- set a response with the customized template
 */
-std::string create_autoindex_response(
-    const location &location, const std::string &folder)
+void create_autoindex_response(
+    request &request, const location &location, const std::string &folder)
 {
 	std::vector<std::string> dir_content_vector = get_dir_content(
 		location.root + folder);
@@ -142,7 +139,5 @@ std::string create_autoindex_response(
         html_template, folder, "<!-- insert header here -->");
 	insert_string_into_template(html_template, dir_content_html
 		, "<!-- insert directory listing here -->");
-	std::string response = assemble_response(html_template, folder);
-	// TESTING_print_response(response_header, index_html);
-	return (response);
+	assemble_and_set_response(request, html_template, folder);
 }

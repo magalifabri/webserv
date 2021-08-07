@@ -17,23 +17,17 @@ bool request::collect_body_chunked(const char *data, const size_t &data_size)
 	else if (data_contains_headers == false)
 		body_data.insert(body_data.end(), data, data + data_size);
 
-	/* Check if the last chunk has been fully received.
-	This is marked by the data ending with "0\r\n\r\n" */
 	if (body_data.size() >= 5)
 	{
 		std::string ending(body_data.end() - 5, body_data.end());
 		if (ending == "0\r\n\r\n")
 		{
 			request_received = true;
-			std::cout << CYAN "chunked data fully received: start processing..." RESET << std::endl; // TESTING
+			// std::cout << CYAN "chunked data fully received: start processing..." RESET << std::endl; // TESTING
 			parse_chunked_data();
 			// std::cout << CYAN "chunked data processed" RESET << std::endl; // TESTING
 			if (body_data.size() > (unsigned long)location.client_max_body_size)
-			{
-				// std::cout << "body_data.size(): " << body_data.size() << std::endl; // TESTING
-				// TESTING_print_vector_char(body_data); // TESTING
 				return (false);
-			}
 		}
 	}
 	return (true);

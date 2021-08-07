@@ -53,10 +53,10 @@ void TESTING_print_response(std::string header, std::string body)
 	(void)body;
 	(void)header;
 	
-	// std::cout << MAGENTA "\n--- SENDING RESPONSE ---\n'"
-	// << header
-	// << body
-	// <<  "'\n------------------------" RESET << std::endl;
+	std::cout << MAGENTA "\n--- SENDING RESPONSE ---\n'"
+	<< header
+	<< body
+	<<  "'\n------------------------" RESET << std::endl;
 }
 
 
@@ -64,10 +64,10 @@ void	TESTING_print_servers(std::vector<server> servers)
 {
 	for (size_t i = 0; i < servers.size(); i++)
 	{
-		std::cout << YELLOW << "Server #" << i << RESET << '\n';
+		std::cout << YELLOW << "Server #" << 1 + i << RESET << '\n';
 		for (size_t j = 0; j < servers[i].host.size(); ++j)
 		{
-			std::cout << "host:port: " << servers[i].host[j] << ':' << servers[i].port[j];
+			std::cout << "host|port: " << servers[i].host[j] << ":" << servers[i].port[j];
 			if (servers[i].default_server)
 				std::cout << " default_server";
 			std::cout << '\n';
@@ -84,12 +84,13 @@ void	TESTING_print_servers(std::vector<server> servers)
 				  << "accepted_methods: ";
 		for (size_t j = 0; j < servers[i].accepted_methods.size(); ++j)
 			std::cout << servers[i].accepted_methods[j] << " ";
-		std::cout << '\n'
-				  << "autoindex: " << servers[i].autoindex << '\n';
+		std::cout << '\n';
+		if (servers[i].autoindex)
+			std::cout << "autoindex: " << servers[i].autoindex << '\n';
 		std::cout << "client_max_body_size: " << servers[i].client_max_body_size << '\n';
-		std::map<size_t, std::string>::iterator it = servers[i].error_pages.begin();
-		for (; it != servers[i].error_pages.end(); it++)
-			std::cout << "error_page [" << it->first << "] " << it->second << '\n';
+		// std::map<size_t, std::string>::iterator it = servers[i].error_pages.begin();
+		// for (; it != servers[i].error_pages.end(); it++)
+		// 	std::cout << "error_page [" << it->first << "] " << it->second << '\n';
 		std::cout << "upload_path: " << servers[i].upload_path << '\n';
 		std::vector<location>::iterator it2 = servers[i].locations.begin();
 		for (; it2 != servers[i].locations.end(); it2++)
@@ -103,12 +104,13 @@ void	TESTING_print_servers(std::vector<server> servers)
 					  << "  accepted_methods: ";
 			for (size_t j = 0; j < it2->accepted_methods.size(); ++j)
 				std::cout << it2->accepted_methods[j] << " ";
-			std::cout << '\n'
-					  << "  autoindex: " << it2->autoindex << '\n';
+			std::cout << '\n';
+			if (it2->autoindex)
+				std::cout << "  autoindex: " << it2->autoindex << '\n';
 			std::cout << "  client_max_body_size: " << it2->client_max_body_size << '\n';
-			std::map<size_t, std::string>::iterator it = it2->error_pages.begin();
-			for (; it != it2->error_pages.end(); it++)
-				std::cout << "  error_page [" << it->first << "] " << it->second << '\n';
+			// std::map<size_t, std::string>::iterator it = it2->error_pages.begin();
+			// for (; it != it2->error_pages.end(); it++)
+			// 	std::cout << "  error_page [" << it->first << "] " << it->second << '\n';
 			std::cout << "  upload_path: " << it2->upload_path << '\n';
 			if (it2->cgi)
 				std::cout << "  cgi_pass " << it2->cgi_pass << '\n';
