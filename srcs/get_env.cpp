@@ -1,6 +1,7 @@
 #include "webserv.hpp"
 
-char**	get_env(webserv& webserv, request& request, std::string const& content_length)
+// char**	get_env(webserv& webserv, request& request, std::string const& content_length)
+char**	get_env(request& request, std::string const& content_length, std::string document_root)
 {
 	std::map<std::string, std::string> env;
 	env["CONTENT_LENGTH"] = content_length;
@@ -8,11 +9,12 @@ char**	get_env(webserv& webserv, request& request, std::string const& content_le
 		env["CONTENT_TYPE"] = "text/html";
 	else
 		env["CONTENT_TYPE"] = request.headers_map["content-type"];
-	env["DOCUMENT_ROOT"] = webserv.cwd;
-	if (request.location.root[0] != '/')
-		env["DOCUMENT_ROOT"] += request.location.root;
-	else
-		env["DOCUMENT_ROOT"] = request.location.root;
+	env["DOCUMENT_ROOT"] = document_root;
+	// env["DOCUMENT_ROOT"] = webserv.cwd;
+	// if (request.location.root[0] != '/')
+	// 	env["DOCUMENT_ROOT"] += request.location.root;
+	// else
+	// 	env["DOCUMENT_ROOT"] = request.location.root;
 	env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	size_t start;
 	if (request.location.cgi_ext == ".bla")

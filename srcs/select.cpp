@@ -83,7 +83,10 @@ bool	select_index(request& request, std::string* URI)
 		if (!stat((request.location.root + tmp).c_str(), &buffer))
 		{
 			*URI = tmp;
-			request.headers_map["target"] += "/" + request.location.index[i];
+			if (request.headers_map["target"] != "/")
+				request.headers_map["target"] += "/" + request.location.index[i];
+			else
+				request.headers_map["target"] += request.location.index[i];
 			// std::cout << "new target: " << request.headers_map["target"] << '\n'; // TESTING
 			request.location = select_location(request.server,
 				request.headers_map["target"], request.headers_map["method"]);

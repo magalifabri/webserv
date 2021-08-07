@@ -7,8 +7,15 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 	std::string input = get_input(request, location.root);
 	// std::cout << "input: " << input << '\n'; // TESTING
 
-	char** args = get_args(webserv.cwd, location.cgi_pass, request.headers_map["target"]);
-	char** envp = get_env(webserv, request, SSTR(input.length()));
+	std::string document_root = webserv.cwd;
+	if (location.root[0] != '/')
+		document_root += location.root;
+	else
+		document_root = location.root;
+	// std::cout << "document_root: " << document_root << '\n'; // TESTING
+
+	char** args = get_args(webserv.cwd, location.cgi_pass, document_root + request.headers_map["target"]);
+	char** envp = get_env(request, SSTR(input.length()), document_root);
 
 	write(webserv.fdin, input.c_str(), input.length());
 	lseek(webserv.fdin, 0, SEEK_SET);
@@ -63,7 +70,7 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 
 void	edit_response_headers(request& request, std::string response)
 {
-	// std::cout << RED "RESPONSE\n" RESET << *response << '\n'; // TESTING
+	std::cout << RED "RESPONSE\n" RESET << response << '\n'; // TESTING
 
 	std::string headers = response.substr(0, response.find("\r\n\r\n") + 4);
 	std::string body = response.substr(response.find("\r\n\r\n") + 4);

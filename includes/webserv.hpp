@@ -80,7 +80,8 @@ void			close_fds(webserv& webserv);
 void			delete_arrays(char** args, char** envp);
 
 /* get_env.cpp */
-char**			get_env(webserv& webserv, request& request, std::string const& content_length);
+char**			get_env(request& request, std::string const& content_length, std::string document_root);
+// char**			get_env(webserv& webserv, request& request, std::string const& content_length);
 std::map<std::string, std::string>	add_request_headers(request& request, std::map<std::string, std::string> env);
 std::string		format_http_header(std::string const& name);
 char**			to_envp(std::map<std::string, std::string> env);
