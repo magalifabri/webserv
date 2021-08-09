@@ -125,8 +125,9 @@ void assemble_and_set_response(
 - set a response with the customized template
 */
 void create_autoindex_response(
-    request &request, const location &location, const std::string &folder)
+    request &request, const location &location)
 {
+	std::string folder = request.headers_map["target"];
 	std::vector<std::string> dir_content_vector = get_dir_content(
 		location.root + folder);
 	append_slash_to_dirs(dir_content_vector, location.root + folder);

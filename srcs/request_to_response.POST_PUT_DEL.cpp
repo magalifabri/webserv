@@ -37,12 +37,8 @@ std::string find_untaken_name(const std::string &upload_path)
 
 
 
-void handle_POST_request(webserv& webserv, location location, request &request)
+void handle_POST_request(const location &location, request &request)
 {
-	/* check for CGI */
-	if (request.location.cgi)
-		return (execute_cgi(webserv, request, request.location));
-
 	if (request.body_data.empty() == true)
 		return (set_2xx_response_page(request, "200 OK", ""));
 
@@ -95,7 +91,7 @@ void handle_PUT_request(const location &location, request &request)
 
 void handle_DELETE_request(const location &location, request &request)
 {
-	std::string target = location.root + request.headers_map["full-target"];
+	std::string target(location.root + request.headers_map["full-target"]);
 
 	std::cout << BOLD RED "DELETE request for: " << target << RESET << std::endl; // TESTING
 

@@ -16,12 +16,14 @@ void set_response(webserv &webserv, request &request)
 		return (create_get_form_response(request));
 	else if (request.headers_map["method"] == "DELETE")
 		return (handle_DELETE_request(request.location, request));
-	else if (request.headers_map["method"] == "POST")
-		return (handle_POST_request(webserv, request.location, request));
 	else if (request.headers_map["method"] == "PUT")
 		return (handle_PUT_request(request.location, request));
+	else if (request.location.cgi)
+		return (execute_cgi(webserv, request, request.location));
+	else if (request.headers_map["method"] == "POST")
+		return (handle_POST_request(request.location, request));
 	else
-		return (handle_GET_or_HEAD_request(webserv, request));
+		return (handle_GET_or_HEAD_request(request.location, request));
 }
 
 
@@ -55,6 +57,13 @@ void set_redirection_response(request &request, context *cxt)
 */
 void request_to_response(webserv& webserv, request &request)
 {
+	handle_location_aliasing(request);
+	if (is_directory(request.location.root + request.headers_map["target"])
+		&& request.location.autoindex == false)
+		select_index(request);
+	check_for_cgi(request);
+	// std::cout << "location: '" << request.location.name << "'\n"; // TESTING
+
 	if (request_method_allowed(request, request.location) == false)
 		throw (405);
 	if (!request.server.redirect.empty()) // server redirection w/ location

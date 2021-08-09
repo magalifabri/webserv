@@ -74,14 +74,14 @@ void			edit_response_headers(request& request, std::string response);
 
 /* execute_cgi.utils.cpp */
 void			init_fds(webserv& webserv);
-std::string		get_input(request& request, std::string document_root);
+std::string		get_input(request& request, std::string const& document_root);
+std::string		get_document_root(webserv const& webserv, std::string const& root);
 char**			get_args(std::string cwd, std::string cgi_pass, std::string target);
 void			close_fds(webserv& webserv);
 void			delete_arrays(char** args, char** envp);
 
 /* get_env.cpp */
 char**			get_env(request& request, std::string const& content_length, std::string document_root);
-// char**			get_env(webserv& webserv, request& request, std::string const& content_length);
 std::map<std::string, std::string>	add_request_headers(request& request, std::map<std::string, std::string> env);
 std::string		format_http_header(std::string const& name);
 char**			to_envp(std::map<std::string, std::string> env);
@@ -100,7 +100,6 @@ size_t			find_brace(std::string const& str, size_t start);
 std::vector<std::string>	get_params(std::string const& params);
 void			add_default_location(server& server);
 void			check_server_names(webserv& webserv, server& server, std::string host_port);
-// void			check_server_names(server& server, std::string host_port);
 std::string		extract_server_block(std::string const& str, size_t& pos, size_t& tmp);
 std::string		extract_location_block(std::string const& str, size_t& pos, size_t& tmp);
 
@@ -123,8 +122,7 @@ void			insert_string_into_template(std::vector<char> &html_template,
 					const std::string &insert, const std::string location);
 void			assemble_and_set_response(request &request,
 					const std::vector<char> &html_template, const std::string &folder);
-void			create_autoindex_response(request &request, const location &location,
-					const std::string &folder);
+void			create_autoindex_response(request &request, const location &location);
 
 /* request_to_response.cpp */
 void			set_response(webserv &webserv, request &request);
@@ -148,16 +146,16 @@ void			handle_webform_POST(const location &location, request &request);
 
 /* request_to_response.GET_HEAD.cpp */
 bool			URI_is_accessible(const std::string &path);
-bool			check_URI_existence(request &request, std::string &target);
-void			handle_location_aliasing(const request &request, std::string &target);
-void			set_response(request &request, const std::string &target);
-void			handle_GET_or_HEAD_request(webserv& webserv, request &request);
+bool			check_URI_existence(request &request);
+void			handle_location_aliasing(request &request);
+void			set_response(request &request);
+void			handle_GET_or_HEAD_request(const location &location, request &request);
 
 /* request_to_response.POST_PUT_DEL.cpp */
 void			create_file_on_server(const request &request, std::string path,
 					const std::string &filename);
 std::string		find_untaken_name(const std::string &upload_path);
-void			handle_POST_request(webserv& webserv, location location, request &request);
+void			handle_POST_request(const location &location, request &request);
 void			handle_PUT_request(const location &location, request &request);
 void			handle_DELETE_request(const location &location, request &request);
 
@@ -166,7 +164,8 @@ std::string		get_content_type(const std::string &status, const std::string &URI)
 std::string		get_response_body(const std::string &html_page_URI);
 
 /* select.cpp */
-bool			select_index(request& request, std::string* URI);
+bool			select_index(request& request);
+void			check_for_cgi(request& request);
 
 /* server.cpp */
 void 			run_servers(webserv &webserv);

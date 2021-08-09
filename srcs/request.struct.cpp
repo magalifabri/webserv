@@ -52,7 +52,7 @@ void request::process_data(
 		parse_headers();
 
 		server = select_server(webserv, client_ip, headers_map["host"], sd);
-		location = select_location(server, headers_map["target"], headers_map["method"]);
+		location = select_location(server, headers_map["target"]);
 		location.server = &server;
 		// std::cout << "location: '" << location.name << "'" << std::endl; // TESTING
 

@@ -21,23 +21,7 @@ server&	select_server(webserv& webserv, std::string client_ip, std::string host,
 	throw std::string("500 Internal Server Error");
 }
 
-static std::string	get_root(server server, std::string URI)
-{
-	while (!URI.empty())
-	{
-		for (size_t i = 0; i < server.locations.size(); i++)
-			if (server.locations[i].name == URI)
-				return server.locations[i].root;
-		URI = URI.substr(0, URI.rfind('/'));
-		for (size_t i = 0; i < server.locations.size(); i++)
-			if (server.locations[i].name == URI)
-				return server.locations[i].root;
-		URI = URI.substr(0, URI.rfind('/') + 1);
-	}
-	return server.root;
-}
-
-location&	select_location(server server, std::string URI, std::string method)
+location&	select_location(server server, std::string URI)
 {
 	// std::cout << URI << '\n'; // TESTING
 	if (URI[URI.length() - 1] != '/')
@@ -51,48 +35,49 @@ location&	select_location(server server, std::string URI, std::string method)
 		for (size_t i = 0; i < server.locations.size(); i++)
 			if (server.locations[i].name == URI)
 				return server.locations[i];
-		if (URI.rfind(".") != std::string::npos)
-		{
-			std::string ext = URI.substr(URI.rfind("."));
-			for (size_t i = 0; i < server.locations.size(); i++)
-			{
-				if (method == "GET" && ext == ".bla")
-					break ;
-				if (server.locations[i].name == "*" + ext)
-				{
-					server.locations[i].root = get_root(server, URI);
-					return server.locations[i];
-				}
-			}
-		}
 		URI = URI.substr(0, URI.rfind('/') + 1);
 	}
 	throw std::string("500 Internal Server Error");
 }
 
-bool	select_index(request& request, std::string* URI)
+bool	select_index(request& request)
 {
+	std::string target(request.headers_map["target"]);
 	for (size_t i = 0; i < request.location.index.size(); i++)
 	{
 		std::string tmp;
-		if ((*URI)[URI->length() - 1] != '/')
-			tmp = *URI + "/" + request.location.index[i];
+		if (target[target.length() - 1] != '/')
+			tmp = target + "/" + request.location.index[i];
 		else
-			tmp = *URI + request.location.index[i];
+			tmp = target + request.location.index[i];
 		struct stat buffer;
 		if (!stat((request.location.root + tmp).c_str(), &buffer))
 		{
-			*URI = tmp;
-			if (request.headers_map["target"] != "/")
-				request.headers_map["target"] += "/" + request.location.index[i];
-			else
-				request.headers_map["target"] += request.location.index[i];
+			request.headers_map["target"] = tmp;
 			// std::cout << "new target: " << request.headers_map["target"] << '\n'; // TESTING
-			request.location = select_location(request.server,
-				request.headers_map["target"], request.headers_map["method"]);
-			request.location.server = &request.server;
 			return true;
 		}
 	}
 	return false;
+}
+
+void	check_for_cgi(request& request)
+{
+	std::string target = request.headers_map["target"];
+	if (target.rfind(".") != std::string::npos)
+	{
+		std::string ext = target.substr(target.rfind("."));
+		// std::cout << ext << '\n'; // TESTING
+		for (size_t i = 0; i < request.server.locations.size(); i++)
+		{
+			if (request.server.locations[i].name == "*" + ext)
+			{
+				std::string root = request.location.root;
+				request.location = request.server.locations[i];
+				request.location.root = root;
+				request.location.server = &request.server;
+				// std::cout << "location: '" << request.location.name << "'\n"; // TESTING
+			}
+		}
+	}
 }

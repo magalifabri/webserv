@@ -7,11 +7,7 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 	std::string input = get_input(request, location.root);
 	// std::cout << "input: " << input << '\n'; // TESTING
 
-	std::string document_root = webserv.cwd;
-	if (location.root[0] != '/')
-		document_root += location.root;
-	else
-		document_root = location.root;
+	std::string document_root = get_document_root(webserv, location.root);
 	// std::cout << "document_root: " << document_root << '\n'; // TESTING
 
 	char** args = get_args(webserv.cwd, location.cgi_pass, document_root + request.headers_map["target"]);
@@ -70,24 +66,29 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 
 void	edit_response_headers(request& request, std::string response)
 {
-	std::cout << RED "RESPONSE\n" RESET << response << '\n'; // TESTING
+	// std::cout << RED "RESPONSE\n" RESET << response << '\n'; // TESTING
 
-	std::string headers = response.substr(0, response.find("\r\n\r\n") + 4);
-	std::string body = response.substr(response.find("\r\n\r\n") + 4);
+	size_t pos = response.find("\r\n\r\n");
+	std::string headers = response.substr(0, pos + 4);
+	std::string body = response.substr(pos + 4);
 
-	size_t pos = headers.find("Status:");
+	std::string status = "200 OK";
+	if ((pos = headers.find("Status: ")) != std::string::npos)
+	{
+		pos += 8;
+		size_t tmp = headers.find_first_of("\r\n", pos);
+		status = headers.substr(pos, tmp - pos);
+		headers.erase(0, headers.find_first_not_of("\r\n", tmp));
+	}
 
-	if (headers.find("HTTP/1.1") == std::string::npos && pos == std::string::npos)
-		headers.replace(0, 0, "HTTP/1.1 200 OK\n");
+	if (headers.find("HTTP/1.1") == std::string::npos)
+		request.response_header = "HTTP/1.1 " + status + "\n";
 
-	if (headers.find("HTTP/1.1") == std::string::npos && pos != std::string::npos)
-		headers.replace(pos, std::string("Status:").length(), "HTTP/1.1");
+	if (headers.find("Content-length") == std::string::npos)
+		request.response_header += SSTR("Content-length: " << body.length() << "\n");
 
-	if (headers.find("Content-Length") == std::string::npos)
-		headers.replace(headers.find("Content-"), 0, SSTR("Content-Length: " << body.length() << "\n"));
-
-	// std::cout << BOLD << GREEN << headers << RESET << '\n'; // TESTING
-
-	request.response_header = headers;
+	request.response_header += headers;
 	request.response_body = body;
+	// std::cout << BOLD << GREEN << request.response_header << RESET << '\n'; // TESTING
+	// std::cout << BOLD << GREEN << request.response_body.substr(0, 100) << "..." RESET << '\n'; // TESTING
 }

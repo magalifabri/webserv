@@ -85,6 +85,6 @@ struct request
 };
 
 server&		select_server(webserv& webserv, std::string ip, std::string host, int sd);
-location&	select_location(server server, std::string URI, std::string method);
+location&	select_location(server server, std::string URI);
 
 #endif

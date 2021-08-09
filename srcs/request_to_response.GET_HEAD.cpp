@@ -16,22 +16,17 @@ bool URI_is_accessible(const std::string &path)
 
 
 
-bool check_URI_existence(request &request, std::string &target)
+bool check_URI_existence(request &request)
 {
+	std::string target(request.headers_map["target"]);
+	// std::cout << "path: " << request.location.root + target << "\n"; // TESTING
+
 	if (is_file(request.location.root + target))
 		// std::cout << "FILE" << '\n'; // TESTING
 		;
-	else if (is_directory(request.location.root + target))
-	{
-		// std::cout << "DIR" << '\n'; // TESTING
-		if (request.location.autoindex == true)
+	else if (is_directory(request.location.root + target)
+		&& request.location.autoindex == true)
 			return (true);
-		else
-		{
-			if (select_index(request, &target) == false)
-				throw (404);
-		}
-	}
 	else
 		throw (404);
 
@@ -40,8 +35,10 @@ bool check_URI_existence(request &request, std::string &target)
 
 
 
-void handle_location_aliasing(const request &request, std::string &target)
+void handle_location_aliasing(request &request)
 {
+	std::string target(request.headers_map["target"]);
+
 	if (!is_directory(request.server.root + request.location.name)
 		&& !is_file(request.server.root + request.location.name))
 	{
@@ -53,12 +50,15 @@ void handle_location_aliasing(const request &request, std::string &target)
 	
 	if (target.empty())
 		target += "/";
+
+	request.headers_map["target"] = target;
 }
 
 
 
-void set_response(request &request, const std::string &target)
+void set_response(request &request)
 {
+	std::string target = request.headers_map["target"];
 	request.response_body = get_response_body(request.location.root + target);
 	std::string content_type = get_content_type("200 OK", target);
 	request.response_header = SSTR(
@@ -80,24 +80,18 @@ void set_response(request &request, const std::string &target)
 - check if the target is accessible
 - create and return a response that holds the resource the URI indicated
 */
-void handle_GET_or_HEAD_request(webserv& webserv, request &request)
+
+void handle_GET_or_HEAD_request(const location &location, request &request)
 {
-	std::string target = request.headers_map["target"];
-	// std::cout << "target: '" << target << "'\n"; // TESTING
 
-	handle_location_aliasing(request, target);
-	// std::cout << "target after aliasing: '" << target << "'\n"; // TESTING
-	bool autoindex = check_URI_existence(request, target);
-	// std::cout << "location: '" << request.location.name << "'\n"; // TESTING
-
-	/* check for CGI */
-	if (request.location.cgi)
-		return (execute_cgi(webserv, request, request.location));
+	bool autoindex = check_URI_existence(request);
 
 	if (autoindex == true)
-		return (create_autoindex_response(request, request.location, target));
+		return (create_autoindex_response(request, location));
 	// std::cout << "target: '" << target << "'\n"; // TESTING
-	if (URI_is_accessible(request.location.root + target) == false)
+
+	if (URI_is_accessible(location.root + request.headers_map["target"]) == false)
 		throw (403);
-	set_response(request, target);
+
+	set_response(request);
 }

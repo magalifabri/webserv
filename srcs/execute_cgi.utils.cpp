@@ -12,13 +12,21 @@ void	init_fds(webserv& webserv)
 	webserv.fdout = fileno(webserv.fout);
 }
 
-std::string	get_input(request& request, std::string document_root)
+std::string	get_input(request& request, std::string const& document_root)
 {
 	if (request.headers_map["method"] == "POST"
 		|| request.headers_map["method"] == "PUT")
 		return std::string(request.body_data.begin(), request.body_data.end());
 	else
 		return get_response_body(document_root + request.headers_map["target"]);
+}
+
+std::string	get_document_root(webserv const& webserv, std::string const& root)
+{
+	if (root[0] != '/')
+		return webserv.cwd + root;
+	else
+		return root;
 }
 
 char**	get_args(std::string cwd, std::string cgi_pass, std::string target)
