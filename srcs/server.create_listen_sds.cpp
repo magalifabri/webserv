@@ -17,8 +17,7 @@ std::vector<int>	create_listen_sds(webserv &webserv)
 					break ;
 			if (listening)
 				continue ;
-			std::cout << "\nRetrieving sd for " << host_port << '\n'; // TESTING
-			// listen_sd = initialise_listen_sd((*it).port[i]);
+			// std::cout << "\nRetrieving sd for " << host_port << '\n'; // TESTING
 			listen_sd = initialise_listen_sd((*it).host[i], (*it).port[i]);
 			listen_sds.push_back(listen_sd);
 			webserv.port_map[listen_sd] = (*it).port[i];
@@ -32,7 +31,7 @@ std::vector<int>	create_listen_sds(webserv &webserv)
 		}
 	}
 
-	std::cout << "\nListening on " << listen_sds.size() << " port(s)\n"; // TESTING
+	// std::cout << "\nListening on " << listen_sds.size() << " port(s)\n"; // TESTING
 
 	return (listen_sds);
 }

@@ -78,7 +78,7 @@ void	integrate_new_connection(webserv &webserv, const int &new_sd,
 		webserv.max_sd_in_set = new_sd;
 
 	std::string client_ip = ft_inet_ntoa(client_addr.sin_addr);
-	std::cout << "\nclient IP: " << client_ip << '\n'; // TESTING
+	// std::cout << "\nclient IP: " << client_ip << '\n'; // TESTING
 	webserv.port_map[new_sd] = webserv.port_map[listen_sd];
 	webserv.client_ip_map[new_sd] = client_ip;
 
