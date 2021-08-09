@@ -13,7 +13,8 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 	char** args = get_args(webserv.cwd, location.cgi_pass, document_root + request.headers_map["target"]);
 	char** envp = get_env(request, SSTR(input.length()), document_root);
 
-	write(webserv.fdin, input.c_str(), input.length());
+	if (write(webserv.fdin, input.c_str(), input.length()) < 0)
+		throw (500);
 	lseek(webserv.fdin, 0, SEEK_SET);
 
 	std::string response;
@@ -53,7 +54,8 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 		while (ret > 0)
 		{
 			memset(buffer, 0, BUFFER_SIZE);
-			ret = read(webserv.fdout, buffer, BUFFER_SIZE - 1);
+			if (ret = read(webserv.fdout, buffer, BUFFER_SIZE - 1) < 0)
+				throw (500);
 			response += buffer;
 		}
 	}
