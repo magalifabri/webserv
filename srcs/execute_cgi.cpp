@@ -71,6 +71,16 @@ void	edit_response_headers(request& request, std::string response)
 	// std::cout << RED "RESPONSE\n" RESET << response << '\n'; // TESTING
 
 	size_t pos = response.find("\r\n\r\n");
+	if (pos == std::string::npos)
+	{
+		request.response_header = SSTR(
+			"HTTP/1.1 200 OK\n" <<
+			"Content-length: " << response.length() << "\n" <<
+			"Content-type: text/plain\r\n\r\n");
+		request.response_body = response;
+		return ;
+	}
+
 	std::string headers = response.substr(0, pos + 4);
 	std::string body = response.substr(pos + 4);
 
