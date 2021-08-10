@@ -80,7 +80,7 @@ void request::parse_headers(void)
 	/* if there is no body: request has been entirely received
 	else: set content_length member attribute */
 	if (headers_map["content-length"] != "")
-		content_length = std::stoi(headers_map["content-length"]);
+		content_length = param_to_u_int(headers_map["content-length"]);
 	else if (headers_map["transfer-encoding"] == "chunked")
 		;
 		// std::cout << CYAN "receiving chunked data..." RESET << std::endl;

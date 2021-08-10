@@ -8,6 +8,8 @@
 # include <netinet/in.h> // struct in_addr
 # include <arpa/inet.h> // inet_addr
 # include <sys/stat.h> // stat
+# include <sys/wait.h> // waitpid
+# include <string.h> // memset
 # include <unistd.h>
 # include <dirent.h> // opendir, readdir
 # include <stdio.h> // perror

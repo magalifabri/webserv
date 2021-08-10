@@ -47,7 +47,10 @@ void	execute_cgi(webserv& webserv, request& request, location& location)
 	{
 		char buffer[BUFFER_SIZE] = {0};
 
-		waitpid(-1, NULL, 0);
+		int status;
+		waitpid(-1, &status, 0);
+		if ((status = WEXITSTATUS(status)) == 1)
+			throw (500);
 		lseek(webserv.fdout, 0, SEEK_SET);
 
 		int	ret = 1;
@@ -76,7 +79,7 @@ void	edit_response_headers(request& request, std::string response)
 		request.response_header = SSTR(
 			"HTTP/1.1 200 OK\n" <<
 			"Content-length: " << response.length() << "\n" <<
-			"Content-type: text/plain\r\n\r\n");
+			"Content-type: plain/text\r\n\r\n");
 		request.response_body = response;
 		return ;
 	}
